@@ -9,6 +9,7 @@
 #SBATCH --mem=32G
 
 module load miniforge/24.7.1
+conda create -n ivyfake python=3.11 -y
 conda activate ivyfake
 
 export LD_LIBRARY_PATH="$CONDA_PREFIX/lib:$LD_LIBRARY_PATH"
