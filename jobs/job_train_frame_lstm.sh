@@ -17,7 +17,7 @@ export MKL_NUM_THREADS=1
 export OPENBLAS_NUM_THREADS=1
 export NUMEXPR_NUM_THREADS=1
 
-cd /users/sc222an
+cd /users/sc222an/mastersprojtest
 mkdir -p runs
 
 python train_baseline.py \
