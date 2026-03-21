@@ -2,7 +2,7 @@
 #SBATCH --job-name=ivy_frame_lstm
 #SBATCH --output=frame_lstm_%j.out
 #SBATCH --error=frame_lstm_%j.err
-#SBATCH --time=12:00:00
+#SBATCH --time=40:00:00
 #SBATCH --partition=gpu
 #SBATCH --gres=gpu:1
 #SBATCH --cpus-per-task=8
@@ -25,8 +25,8 @@ mkdir -p runs
 python train_baseline.py \
   --mode frames \
   --backbone frame_lstm \
-  --batch_size 8 \
-  --num_workers 4 \
-  --epochs 5 \
+  --batch_size 4 \
+  --num_workers 12 \
+  --epochs 1 \
   --lr 3e-4 \
   --out runs/frame_lstm.pt
