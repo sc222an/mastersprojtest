@@ -1,0 +1,20 @@
+dataset_root: /scratch/sc22as2/IVY-Fake
+splits:
+  train: /scratch/sc22as2/IVY-Fake/splits/standard_train_clean.csv
+  val:   /scratch/sc22as2/IVY-Fake/splits/standard_val_clean.csv
+  test:  /scratch/sc22as2/IVY-Fake/splits/standard_test_clean.csv
+
+preprocess:
+  image_size: 224
+
+baseline_frames:
+  mode: frames
+  n_frames: 16
+  batch_size: 8
+  num_workers: 4
+
+baseline_clip:
+  mode: clip
+  clip_len: 16
+  batch_size: 4
+  num_workers: 4
