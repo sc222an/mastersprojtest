@@ -18,6 +18,7 @@ export OPENBLAS_NUM_THREADS=1
 export NUMEXPR_NUM_THREADS=1
 
 cd /users/sc222an/mastersprojtest
+pip install -r requirements.txt
 mkdir -p runs
 
 python train_baseline.py \
