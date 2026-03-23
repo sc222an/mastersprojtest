@@ -9,7 +9,6 @@
 #SBATCH --mem=32G
 
 module load miniforge/24.7.1
-conda create -n ivyfake python=3.11 -y
 conda activate ivyfake
 
 export LD_LIBRARY_PATH="$CONDA_PREFIX/lib:$LD_LIBRARY_PATH"
@@ -19,14 +18,13 @@ export OPENBLAS_NUM_THREADS=1
 export NUMEXPR_NUM_THREADS=1
 
 cd /users/sc222an/mastersprojtest
-pip install -r requirements.txt
 mkdir -p runs
 
 python train_baseline.py \
   --mode frames \
   --backbone frame_lstm \
   --batch_size 4 \
-  --num_workers 12 \
-  --epochs 1 \
+  --num_workers 8 \
+  --epochs 5 \
   --lr 3e-4 \
   --out runs/frame_lstm.pt

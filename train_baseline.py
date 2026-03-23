@@ -94,8 +94,18 @@ def main():
         model = R3D18Baseline(pretrained=True)
 
     model.to(device)
-    opt = AdamW(model.parameters(), lr=args.lr, weight_decay=args.weight_decay)
+
+    # Partial Freezing: Freeze early layers (stem, layer1, layer2) of the backbone
+    if hasattr(model, "backbone"):
+        for name, param in model.backbone.named_parameters():
+            if any(layer_name in name for layer_name in ["conv1", "bn1", "layer1", "layer2"]):
+                param.requires_grad = False
+
+    trainable_params = filter(lambda p: p.requires_grad, model.parameters())
+    opt = AdamW(trainable_params, lr=args.lr, weight_decay=args.weight_decay)
     loss_fn = nn.BCEWithLogitsLoss()
+
+    scaler = torch.amp.GradScaler("cuda") if device == "cuda" else None
 
     best_val = 1e9
     for epoch in range(1, args.epochs + 1):
@@ -109,10 +119,19 @@ def main():
             y = y.to(device, non_blocking=True).float()
 
             opt.zero_grad(set_to_none=True)
-            logits = model(x)
-            loss = loss_fn(logits, y)
-            loss.backward()
-            opt.step()
+            
+            if scaler is not None:
+                with torch.amp.autocast("cuda"):
+                    logits = model(x)
+                    loss = loss_fn(logits, y)
+                scaler.scale(loss).backward()
+                scaler.step(opt)
+                scaler.update()
+            else:
+                logits = model(x)
+                loss = loss_fn(logits, y)
+                loss.backward()
+                opt.step()
 
             running += loss.item() * y.size(0)
             n += y.size(0)
