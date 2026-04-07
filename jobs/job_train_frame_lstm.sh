@@ -25,6 +25,6 @@ python train_baseline.py \
   --backbone frame_lstm \
   --batch_size 4 \
   --num_workers 8 \
-  --epochs 5 \
+  --epochs 20 \
   --lr 3e-4 \
   --out runs/frame_lstm.pt
