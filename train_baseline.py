@@ -1,5 +1,6 @@
 from __future__ import annotations
 import argparse, time
+import pandas as pd
 import torch
 import torch.nn as nn
 from torch.optim import AdamW
@@ -103,7 +104,11 @@ def main():
 
     trainable_params = filter(lambda p: p.requires_grad, model.parameters())
     opt = AdamW(trainable_params, lr=args.lr, weight_decay=args.weight_decay)
-    loss_fn = nn.BCEWithLogitsLoss()
+    _df = pd.read_csv(args.train_csv)
+    n_neg = (_df['label'] == 0).sum()
+    n_pos = (_df['label'] == 1).sum()
+    pos_weight = torch.tensor([n_neg / max(n_pos, 1)]).to(device)
+    loss_fn = nn.BCEWithLogitsLoss(pos_weight=pos_weight)
 
     scaler = torch.amp.GradScaler("cuda") if device == "cuda" else None
 
