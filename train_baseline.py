@@ -5,6 +5,7 @@ import torch
 import torch.nn as nn
 from torch.optim import AdamW
 from tqdm import tqdm
+from pathlib import Path
 
 import torch.multiprocessing as mp #
 mp.set_start_method("spawn", force=True) #
@@ -56,10 +57,16 @@ def main():
     ap.add_argument("--epochs", type=int, default=5)
     ap.add_argument("--lr", type=float, default=3e-4)
     ap.add_argument("--weight_decay", type=float, default=1e-4)
-    ap.add_argument("--out", default="runs/baseline.pt")
+    ap.add_argument("--name", default="baseline", help="name of the run")
+    ap.add_argument("--resume", help="path to checkpoint to resume from")
     args = ap.parse_args()
 
     device = "cuda" if torch.cuda.is_available() else "cpu"
+    
+    out_dir = Path("runs")
+    out_dir.mkdir(exist_ok=True)
+    args.out = str(out_dir / f"{args.name}_best.pt")
+    latest_path = str(out_dir / f"{args.name}_latest.pt")
 
     cfg = DataConfig(
         dataset_root=args.dataset_root,
@@ -112,8 +119,19 @@ def main():
 
     scaler = torch.amp.GradScaler("cuda") if device == "cuda" else None
 
+    start_epoch = 1
     best_val = 1e9
-    for epoch in range(1, args.epochs + 1):
+    
+    if args.resume:
+        ckpt = torch.load(args.resume)
+        model.load_state_dict(ckpt["model"])
+        opt.load_state_dict(ckpt["opt"])
+        start_epoch = ckpt["epoch"] + 1
+        best_val = ckpt["best_val"]
+        print(f"resuming from epoch {start_epoch}")
+
+
+    for epoch in range(start_epoch, args.epochs + 1):
         model.train()
         t0 = time.time()
         running = 0.0
@@ -145,12 +163,22 @@ def main():
         val_loss, val_acc = evaluate(model, val_loader, device)
 
         print(f"[epoch {epoch}] train_loss={train_loss:.4f} val_loss={val_loss:.4f} val_acc={val_acc:.4f} time={time.time()-t0:.1f}s")
+        
+        # save latest
+        torch.save({
+            "model": model.state_dict(),
+            "opt": opt.state_dict(),
+            "epoch": epoch,
+            "best_val": best_val,
+        }, latest_path)
+
 
         if val_loss < best_val:
             best_val = val_loss
             torch.save({"model": model.state_dict(), "args": vars(args)}, args.out)
             print(f"  saved best -> {args.out}")
 
+    model.load_state_dict(torch.load(args.out)["model"]) # load best model
     test_loss, test_acc = evaluate(model, test_loader, device)
     print(f"[test] loss={test_loss:.4f} acc={test_acc:.4f}")
 

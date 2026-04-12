@@ -1,7 +1,7 @@
 #!/bin/bash
-#SBATCH --job-name=ivy_frame_lstm
-#SBATCH --output=frame_lstm_%j.out
-#SBATCH --error=frame_lstm_%j.err
+#SBATCH --job-name=ivy_frame_lstm_resume
+#SBATCH --output=frame_lstm_resume_%j.out
+#SBATCH --error=frame_lstm_resume_%j.err
 #SBATCH --time=40:00:00
 #SBATCH --partition=gpu
 #SBATCH --gres=gpu:1
@@ -18,13 +18,13 @@ export OPENBLAS_NUM_THREADS=1
 export NUMEXPR_NUM_THREADS=1
 
 cd /users/sc222an/mastersprojtest
-mkdir -p runs
 
-python train_baseline.py \
-  --name frame_lstm \
-  --mode frames \
-  --backbone frame_lstm \
-  --batch_size 4 \
-  --num_workers 8 \
-  --epochs 20 \
+python train_baseline.py 
+  --name frame_lstm 
+  --resume runs/frame_lstm_latest.pt 
+  --mode frames 
+  --backbone frame_lstm 
+  --batch_size 4 
+  --num_workers 8 
+  --epochs 20 
   --lr 3e-4
